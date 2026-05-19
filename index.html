@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Digital CS Onboarding Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#faf8f5;min-height:100vh}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:#d1cdc7;border-radius:99px}
+
+.topbar{background:#fff;border-bottom:1px solid #e8e4df;padding:0 28px;display:flex;align-items:center;height:56px;gap:12px;position:sticky;top:0;z-index:100}
+.topbar-logo{width:34px;height:34px;background:#E85D20;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.topbar-title{font-weight:700;font-size:16px;color:#1a1a1a}
+.topbar-spacer{flex:1}
+.live-label{display:flex;align-items:center;gap:6px;font-size:13px;color:#22c55e}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block}
+.sync-indicator{font-size:12px;color:#aaa;display:flex;align-items:center;gap:5px}
+.sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.sync-dot.syncing{background:#f59e0b;animation:pulse 1s infinite}
+.sync-dot.synced{background:#22c55e}
+.sync-dot.error{background:#ef4444}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn-share{background:#fff;border:1.5px solid #e0dbd5;border-radius:9px;padding:7px 16px;font-size:13px;font-weight:600;color:#333}
+.btn-add{background:#E85D20;border:none;border-radius:9px;padding:7px 16px;font-size:13px;font-weight:600;color:#fff}
+
+.main{max-width:780px;margin:0 auto;padding:32px 20px}
+.page-title{font-size:30px;font-weight:800;color:#1a1a1a;font-family:Georgia,serif}
+.page-sub{font-size:14px;color:#888;margin-top:4px;margin-bottom:24px}
+
+.stat-row{display:flex;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.stat-card{background:#fff;border:1px solid #e8e4df;border-radius:14px;padding:20px 24px;flex:1;min-width:120px}
+.stat-val{font-size:32px;font-weight:700;font-family:Georgia,serif;line-height:1}
+.stat-lbl{font-size:13px;color:#888;margin-top:6px}
+
+.progress-box{background:#fff;border:1px solid #e8e4df;border-radius:16px;padding:22px 26px;margin-bottom:20px}
+.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.progress-title{font-weight:700;font-size:15px;color:#1a1a1a}
+.progress-pct{font-weight:800;font-size:18px;color:#E85D20}
+.progress-bar-bg{background:#f0ece8;border-radius:99px;overflow:hidden;width:100%}
+.progress-bar-fill{height:100%;border-radius:99px;transition:width .5s ease}
+.progress-meta{display:flex;justify-content:space-between;font-size:12px;color:#aaa;margin-top:8px}
+.week-bars{display:flex;gap:20px;margin-top:20px;flex-wrap:wrap}
+.week-bar{flex:1;min-width:140px}
+.week-bar-header{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px}
+.week-bar-pct{font-size:13px;font-weight:700;margin-top:6px}
+
+.tabs{display:flex;border-bottom:1.5px solid #e8e4df;margin-bottom:24px;overflow-x:auto}
+.tab-btn{background:none;border:none;padding:12px 16px;font-size:14px;white-space:nowrap;color:#999;font-weight:400;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;display:flex;align-items:center;gap:6px}
+.tab-btn.active{color:#1a1a1a;font-weight:700;border-bottom:2.5px solid #E85D20}
+
+.welcome-banner{background:#1a2235;border-radius:16px;padding:28px 32px;margin-bottom:20px;position:relative;overflow:hidden}
+.welcome-badge{font-size:11px;font-weight:700;color:#E85D20;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.welcome-title{font-size:20px;font-weight:800;color:#fff;margin-bottom:12px;font-family:Georgia,serif}
+.welcome-text{font-size:14px;line-height:1.7;margin-bottom:10px}
+.welcome-circle1{position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none}
+.welcome-circle2{position:absolute;right:40px;top:20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none}
+
+.week-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:14px 0 10px}
+.week-header-left{display:flex;align-items:center;gap:12px}
+.week-num{width:24px;height:24px;border-radius:50%;color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.week-label-text{font-weight:700;font-size:16px;color:#1a1a1a}
+.week-header-right{display:flex;align-items:center;gap:12px}
+.week-days{font-size:12px;color:#aaa}
+.week-chevron{font-size:16px;color:#bbb}
+.week-intro{background:#fff;border:1px solid #e8e4df;border-radius:10px;padding:13px 16px;margin-bottom:8px;font-size:14px;color:#555;line-height:1.65}
+.learn-label{font-size:11px;font-weight:700;color:#aaa;letter-spacing:.8px;text-transform:uppercase;padding:4px 2px 8px}
+
+.task-row{background:#fff;border:1px solid #e8e4df;border-radius:10px;padding:12px 16px;margin-bottom:6px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:opacity .2s}
+.task-row.done{opacity:.55}
+.task-check{width:18px;height:18px;border-radius:50%;border:2px solid #e0dbd5;background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:#fff;font-weight:700}
+.task-name{font-size:14px;color:#333;flex:1}
+.task-row.done .task-name{color:#aaa;text-decoration:line-through}
+.task-focus{font-size:11px;color:#999;background:#f5f2ef;border-radius:6px;padding:3px 9px;white-space:nowrap}
+.closing-note{background:#f9f7f5;border:1px solid #e8e4df;border-radius:12px;padding:18px 22px;margin-top:8px;font-size:14px;color:#555;line-height:1.7}
+
+.summary-strip{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.summary-card{flex:1;min-width:110px;background:#fff;border:1px solid #e8e4df;border-radius:12px;padding:14px 18px}
+.summary-val{font-size:26px;font-weight:700;font-family:Georgia,serif;line-height:1}
+.summary-lbl{font-size:12px;color:#999;margin-top:5px}
+.complete-week-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.complete-week-num{width:26px;height:26px;border-radius:50%;color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.complete-week-wlabel{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.complete-week-title{font-size:15px;font-weight:700;color:#1a1a1a}
+.ts-table{background:#fff;border:1px solid #e8e4df;border-radius:12px;overflow:hidden;margin-bottom:28px}
+.ts-header{display:grid;grid-template-columns:1fr 165px 165px 70px;background:#f9f7f5;border-bottom:1px solid #e8e4df;padding:9px 16px;font-size:11px;font-weight:700;color:#aaa;letter-spacing:.5px;text-transform:uppercase;gap:10px}
+.ts-row{display:grid;grid-template-columns:1fr 165px 165px 70px;padding:13px 16px;border-bottom:1px solid #f5f2ef;align-items:center;gap:10px}
+.ts-row.done-row{background:#fafff9}
+.ts-row:last-child{border-bottom:none}
+.ts-task-name{font-size:14px;color:#1a1a1a;margin-bottom:3px}
+.ts-row.done-row .ts-task-name{color:#aaa;text-decoration:line-through}
+.ts-tag-row{display:flex;align-items:center;gap:8px}
+.ts-focus-tag{font-size:11px;color:#bbb;background:#f5f2ef;border-radius:5px;padding:2px 7px}
+.btn-start{font-size:11px;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:2px 8px;font-weight:600}
+.ts-started{font-size:12px;color:#555;font-weight:500}
+.ts-completed{font-size:12px;color:#0F6E56;font-weight:500}
+.ts-dur{font-size:11px;color:#aaa;margin-top:2px}
+.ts-none{font-size:12px;color:#ccc}
+.complete-circle{width:32px;height:32px;border-radius:50%;border:2px solid #d1d5db;background:#fff;color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto}
+.ts-hint{background:#f9f7f5;border:1px solid #e8e4df;border-radius:10px;padding:13px 18px;font-size:12px;color:#888;line-height:1.7}
+
+.sessions-week{margin-bottom:28px}
+.sessions-week-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sessions-week-num{width:28px;height:28px;border-radius:50%;color:#fff;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.session-table{background:#fff;border:1px solid #e8e4df;border-radius:12px;overflow:hidden}
+.session-header{display:grid;grid-template-columns:36px 1fr 160px 130px;background:#f9f7f5;border-bottom:1px solid #e8e4df;padding:10px 16px;font-size:11px;font-weight:700;color:#aaa;letter-spacing:.5px;text-transform:uppercase;gap:12px}
+.session-row{display:grid;grid-template-columns:36px 1fr 160px 130px;padding:13px 16px;align-items:center;gap:12px}
+.session-num{width:24px;height:24px;border-radius:50%;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.session-name{font-size:14px;color:#1a1a1a}
+.session-focus{font-size:12px;color:#888;font-style:italic}
+.session-deliverable{padding:12px 16px;background:#fefcfb;border-top:1px solid #f0ece8;display:flex;align-items:center;gap:8px}
+
+.tools-note{font-size:14px;color:#888;margin-bottom:20px}
+.tool-list{display:flex;flex-direction:column;gap:10px}
+.tool-card{background:#fff;border:1px solid #e8e4df;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px}
+.tool-icon{width:42px;height:42px;background:#f5f2ef;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.tool-name{font-size:15px;font-weight:700;color:#1a1a1a}
+.tool-desc{font-size:13px;color:#888;margin-top:2px}
+.tool-badge{font-size:12px;color:#E85D20;font-weight:600;background:#fff7f3;border:1px solid rgba(232,93,32,.3);border-radius:99px;padding:4px 12px;white-space:nowrap}
+.tool-select{appearance:none;-webkit-appearance:none;border-radius:99px;padding:6px 36px 6px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;outline:none;min-width:155px;transition:all .2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.tool-select.pending{border:1.5px solid #e0dbd5;background-color:#fff;color:#E85D20}
+.tool-select.granted{border:1.5px solid #0F6E56;background-color:#f0fdf4;color:#0F6E56}
+.tools-footer{margin-top:24px;background:#f9f7f5;border:1px solid #e8e4df;border-radius:12px;padding:16px 20px;font-size:13px;color:#666;line-height:1.6}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:#fff;border-radius:18px;padding:28px 32px;width:520px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-size:18px;font-weight:700;color:#1a1a1a}
+.modal-sub{font-size:13px;color:#888;margin-top:2px}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#888}
+.btn-gen{background:#E85D20;color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:14px;font-weight:600;width:100%;margin-bottom:18px}
+.token-list{display:flex;flex-direction:column;gap:10px;max-height:280px;overflow-y:auto}
+.token-row{background:#f9f7f5;border:1px solid #e8e4df;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.token-val{font-size:13px;font-weight:600;color:#1a1a1a;font-family:monospace}
+.token-date{font-size:11px;color:#aaa;margin-top:2px}
+.btn-copy{background:#fff;color:#555;border:1px solid #e0dbd5;border-radius:7px;padding:6px 12px;font-size:12px;white-space:nowrap}
+.btn-copy.copied{background:#0F6E56;color:#fff;border-color:#0F6E56}
+.btn-revoke{background:#fff;color:#c0392b;border:1px solid #e0dbd5;border-radius:7px;padding:6px 10px;font-size:12px}
+.modal-footer{margin-top:18px;font-size:12px;color:#bbb;text-align:center}
+.token-empty{text-align:center;color:#aaa;font-size:14px;padding:20px 0}
+
+.login-wrap{min-height:100vh;background:#faf8f5;display:flex;align-items:center;justify-content:center}
+.login-box{background:#fff;border-radius:18px;padding:40px 44px;width:400px;max-width:95vw;border:1px solid #e8e4df;text-align:center}
+.login-icon{width:44px;height:44px;background:#E85D20;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:22px}
+.login-title{font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:6px}
+.login-sub{font-size:14px;color:#888;margin-bottom:28px}
+.login-input{width:100%;border:1.5px solid #e0dbd5;border-radius:9px;padding:12px 14px;font-size:15px;font-family:monospace;outline:none;margin-bottom:12px;text-align:center;letter-spacing:1px}
+.login-error{color:#c0392b;font-size:13px;margin-bottom:10px}
+.btn-login{width:100%;background:#E85D20;color:#fff;border:none;border-radius:9px;padding:12px;font-size:15px;font-weight:600}
+
+.loading-screen{min-height:100vh;background:#faf8f5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#888;font-size:14px}
+.spinner{width:36px;height:36px;border:3px solid #e8e4df;border-top-color:#E85D20;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.config-banner{background:#fff3cd;border:1px solid #ffc107;border-radius:12px;padding:16px 20px;margin:24px auto;max-width:780px;font-size:14px;color:#856404;line-height:1.6}
+.config-banner strong{color:#533f03}
+.config-banner code{background:#ffeaa7;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:13px}
+
+@media(max-width:600px){
+  .ts-header,.ts-row{grid-template-columns:1fr 120px 50px}
+  .ts-header span:nth-child(3),.ts-row>div:nth-child(3){display:none}
+  .week-bars{flex-direction:column}
+  .topbar{padding:0 14px}
+  .main{padding:20px 14px}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ══════════════════════════════════════════════════════════════════
+//  ⚙️  CONFIGURATION — paste your Supabase values here
+// ══════════════════════════════════════════════════════════════════
+const SUPABASE_URL  = "https://okczdushlbkbmxsqbtfo.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rY3pkdXNobGJrYm14c3FidGZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxOTM5ODEsImV4cCI6MjA5NDc2OTk4MX0.m_xdB1JeDU0lK3N-kD79Th1tOmi7eaZOlCP6lSPHuZs";
+// ══════════════════════════════════════════════════════════════════
+
+const CONFIGURED = SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON !== "YOUR_SUPABASE_ANON_KEY";
+
+// ── Data ───────────────────────────────────────────────────────────
+const TASKS = {
+  week1:{label:"WEEK 1",color:"#E85D20",days:"Days 1–5",title:"Introduction to Digital CS at SmartBear",
+    intro:"In your first week, the focus will be on understanding the Digital CS motion at SmartBear. These sessions will be led by your manager, who will schedule calendar slots for the discussions.",
+    tasks:[
+      {label:"How Digital CS creates value for customers and the business",focus:"Value & Impact"},
+      {label:"The major focus areas of the Digital CS team",focus:"Team Structure"},
+      {label:"Key outcomes and success metrics",focus:"KPIs & Planning"},
+      {label:"How the team collaborates with other functions",focus:"Stakeholder Mapping"},
+    ]},
+  week2:{label:"WEEK 2",color:"#0F6E56",days:"Days 6–10",title:"SmartBear Tools and Resources",
+    intro:"The second week will focus on getting familiar with the tools and systems used across SmartBear and Digital CS. The goal is to help you understand where information lives, how customer data is tracked, and how the Digital CS team uses these tools in day-to-day workflows.",
+    tasks:[
+      {label:"Planhat",focus:"Customer Success Platform"},
+      {label:"Amplitude / Mixpanel and Other Data Integrations",focus:"Analytics & Data"},
+      {label:"CS Resources: Confluence",focus:"Knowledge Management"},
+      {label:"Salesforce",focus:"CRM & Customer Data"},
+    ]},
+  week3:{label:"WEEK 3",color:"#534AB7",days:"Days 11–15",title:"Product and Enablement Overview",
+    intro:"In your third week, the focus will shift toward SmartBear's product offering and key product areas. By the end of week three, you should have a strong foundation in the Digital CS motion, the tools we use, and the products we support.",
+    tasks:[
+      {label:"API Design and Testing",focus:"Technical Foundations"},
+      {label:"Test Management Basics",focus:"QA & Testing"},
+      {label:"SmartBear Product Offering",focus:"Product Knowledge"},
+      {label:"Relevant Enablement Sessions",focus:"Enablement"},
+    ]},
+};
+const TOOLS=[
+  {name:"Salesforce",icon:"☁️",desc:"CRM & customer data"},
+  {name:"Amplitude",icon:"📊",desc:"Product analytics"},
+  {name:"Planhat",icon:"🎯",desc:"Customer success platform"},
+  {name:"Claude",icon:"🤖",desc:"AI assistant & tooling"},
+  {name:"Zoom",icon:"📹",desc:"Video conferencing"},
+];
+
+// ── Supabase client (no npm, pure fetch) ──────────────────────────
+const SB = {
+  headers:{"apikey":SUPABASE_ANON,"Authorization":"Bearer "+SUPABASE_ANON,"Content-Type":"application/json","Prefer":"return=representation"},
+
+  async get(table,filter){
+    const q=filter?`?${filter}`:"";
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}${q}`,{headers:SB.headers});
+    if(!r.ok)throw new Error(await r.text());
+    return r.json();
+  },
+  async upsert(table,body){
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{
+      method:"POST",
+      headers:{...SB.headers,"Prefer":"resolution=merge-duplicates,return=representation"},
+      body:JSON.stringify(body)
+    });
+    if(!r.ok)throw new Error(await r.text());
+    return r.json();
+  },
+  async delete(table,filter){
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`,{method:"DELETE",headers:SB.headers});
+    if(!r.ok)throw new Error(await r.text());
+  },
+
+  // Load all state from Supabase
+  async loadAll(){
+    const [progRows, tokenRows] = await Promise.all([
+      SB.get("dcs_progress","id=eq.singleton"),
+      SB.get("dcs_tokens","order=created_at.asc"),
+    ]);
+    const prog = progRows[0] || {progress:{},timestamps:{}};
+    return {
+      progress:   prog.progress   || {},
+      timestamps: prog.timestamps || {},
+      tokens:     tokenRows.map(t=>({token:t.token, createdAt: new Date(t.created_at).getTime()})),
+    };
+  },
+
+  // Save progress + timestamps (single row upsert)
+  async saveProgress(progress, timestamps){
+    await SB.upsert("dcs_progress",{id:"singleton",progress,timestamps,updated_at:new Date().toISOString()});
+  },
+
+  async addToken(token){
+    await SB.upsert("dcs_tokens",{token,created_at:new Date().toISOString()});
+  },
+  async deleteToken(token){
+    await SB.delete("dcs_tokens","token=eq."+encodeURIComponent(token));
+  },
+};
+
+// ── Fallback localStorage (used when not configured) ──────────────
+const SK_TOKENS="dcs_share_tokens", SK_PROGRESS="dcs_task_progress", SK_TIMESTAMPS="dcs_timestamps";
+function ls(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+// ── State ──────────────────────────────────────────────────────────
+let state={
+  tokens:[],progress:{},timestamps:{},toolAccess:{},
+  activeTab:"plan",expandedWeeks:{week1:true,week2:false,week3:false},
+  showShare:false,authed:false,isOwner:false,
+  loginError:"",tokenParam:null,copiedToken:null,
+  syncStatus:"synced", // "syncing" | "synced" | "error"
+  loading:true,
+};
+
+(function(){
+  const p=new URLSearchParams(window.location.search);
+  const t=p.get("token");
+  if(t){state.tokenParam=t;}
+  else{state.authed=true;state.isOwner=true;}
+})();
+
+function setState(patch){Object.assign(state,patch);render();}
+
+// ── Sync helpers ───────────────────────────────────────────────────
+async function loadFromSupabase(){
+  if(!CONFIGURED){
+    // fall back to localStorage
+    state.tokens    = ls(SK_TOKENS)||[];
+    state.progress  = ls(SK_PROGRESS)||{};
+    state.timestamps= ls(SK_TIMESTAMPS)||{};
+    state.loading   = false;
+    render(); return;
+  }
+  try{
+    const data=await SB.loadAll();
+    Object.assign(state,data,{loading:false,syncStatus:"synced"});
+    render();
+  }catch(e){
+    console.error("Supabase load error",e);
+    state.loading=false; state.syncStatus="error";
+    // fall back to localStorage
+    state.tokens    = ls(SK_TOKENS)||[];
+    state.progress  = ls(SK_PROGRESS)||{};
+    state.timestamps= ls(SK_TIMESTAMPS)||{};
+    render();
+  }
+}
+
+let saveTimer=null;
+function scheduleSave(progress, timestamps){
+  setState({syncStatus:"syncing"});
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    if(!CONFIGURED){
+      lsSet(SK_PROGRESS,progress);
+      lsSet(SK_TIMESTAMPS,timestamps);
+      setState({syncStatus:"synced"}); return;
+    }
+    try{
+      await SB.saveProgress(progress,timestamps);
+      setState({syncStatus:"synced"});
+    }catch(e){
+      console.error("Save error",e);
+      setState({syncStatus:"error"});
+    }
+  },600);
+}
+
+// ── Actions ────────────────────────────────────────────────────────
+function genToken(){return Math.random().toString(36).slice(2,10).toUpperCase()+"-"+Math.random().toString(36).slice(2,10).toUpperCase();}
+function fmtTs(ts){if(!ts)return"—";return new Date(ts).toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"});}
+function calcDur(s,e){if(!s||!e)return null;const m=Math.round((e-s)/60000);if(m<60)return m+"m";const h=Math.floor(m/60),r=m%60;return r>0?h+"h "+r+"m":h+"h";}
+
+function toggleTask(week,idx){
+  const key=week+"-"+idx, now=Date.now(), wasDone=!!state.progress[key];
+  const progress={...state.progress,[key]:!wasDone};
+  const ts={...state.timestamps};
+  if(!wasDone){ts[key]=ts[key]?{...ts[key],completedAt:now}:{startedAt:now,completedAt:now};}
+  else{ts[key]={startedAt:ts[key]?ts[key].startedAt:now,completedAt:null};}
+  setState({progress,timestamps:ts});
+  scheduleSave(progress,ts);
+}
+
+function startTask(week,idx){
+  const key=week+"-"+idx;
+  if(state.timestamps[key]&&state.timestamps[key].startedAt)return;
+  const timestamps={...state.timestamps,[key]:{startedAt:Date.now(),completedAt:null}};
+  setState({timestamps});
+  scheduleSave(state.progress,timestamps);
+}
+
+async function createToken(){
+  const token=genToken();
+  const newToken={token,createdAt:Date.now()};
+  const tokens=[...state.tokens,newToken];
+  setState({tokens});
+  if(CONFIGURED){
+    try{await SB.addToken(token);}
+    catch(e){console.error("Token save error",e);}
+  } else {lsSet(SK_TOKENS,tokens);}
+}
+
+async function revokeToken(token){
+  const tokens=state.tokens.filter(t=>t.token!==token);
+  setState({tokens});
+  if(CONFIGURED){
+    try{await SB.deleteToken(token);}
+    catch(e){console.error("Token delete error",e);}
+  } else {lsSet(SK_TOKENS,tokens);}
+}
+
+function copyLink(token){
+  const url=window.location.href.split("?")[0]+"?token="+token;
+  navigator.clipboard.writeText(url).catch(()=>{});
+  setState({copiedToken:token});
+  setTimeout(()=>setState({copiedToken:null}),2000);
+}
+
+function login(inputToken){
+  if(!inputToken){setState({loginError:"Please enter a token."});return;}
+  const valid=state.tokens.find(t=>t.token===inputToken);
+  if(valid){setState({authed:true,isOwner:false,loginError:""});}
+  else setState({loginError:"Invalid or revoked token. Please check and try again."});
+}
+
+// ── DOM helpers ────────────────────────────────────────────────────
+function el(tag,props,children){
+  const e=document.createElement(tag);
+  if(props)Object.entries(props).forEach(([k,v])=>{
+    if(k==="className")e.className=v;
+    else if(k==="style"&&typeof v==="object")Object.assign(e.style,v);
+    else if(k.startsWith("on"))e.addEventListener(k.slice(2).toLowerCase(),v);
+    else e.setAttribute(k,v);
+  });
+  (children||[]).forEach(c=>{
+    if(c==null||c===false)return;
+    e.appendChild(typeof c==="string"?document.createTextNode(c):c);
+  });
+  return e;
+}
+function pbar(value,color,height){
+  const bg=el("div",{className:"progress-bar-bg",style:{height:(height||6)+"px"}});
+  const fill=el("div",{className:"progress-bar-fill",style:{width:value+"%",height:"100%",background:color||"#E85D20"}});
+  bg.appendChild(fill);return bg;
+}
+function allKeys(){return Object.entries(TASKS).flatMap(([wk,w])=>w.tasks.map((_,i)=>wk+"-"+i));}
+
+// ── Render pieces ──────────────────────────────────────────────────
+function renderLoading(){
+  return el("div",{className:"loading-screen"},[
+    el("div",{className:"spinner"}),
+    el("div",{},[CONFIGURED?"Connecting to Supabase…":"Loading dashboard…"]),
+  ]);
+}
+
+function renderConfigBanner(){
+  const b=el("div",{className:"config-banner"});
+  b.innerHTML="<strong>⚙️ Setup required:</strong> Open <code>index.html</code> and replace <code>YOUR_SUPABASE_URL</code> and <code>YOUR_SUPABASE_ANON_KEY</code> with your Supabase project credentials.<br>Until then the dashboard runs with browser localStorage only.";
+  return b;
+}
+
+function renderLogin(){
+  const wrap=el("div",{className:"login-wrap"});
+  const box=el("div",{className:"login-box"});
+  const input=el("input",{className:"login-input",type:"text",placeholder:"XXXXXXXX-XXXXXXXX"});
+  input.addEventListener("input",e=>input.value=e.target.value.toUpperCase());
+  input.addEventListener("keydown",e=>{if(e.key==="Enter")login(input.value.trim());});
+  if(state.tokenParam)input.value=state.tokenParam;
+  box.append(
+    el("div",{className:"login-icon"},["🎯"]),
+    el("div",{className:"login-title"},["Digital CS Dashboard"]),
+    el("div",{className:"login-sub"},["Enter your access token to continue"]),
+    input,
+  );
+  if(state.loginError)box.append(el("div",{className:"login-error"},[state.loginError]));
+  box.append(el("button",{className:"btn-login",onClick:()=>login(input.value.trim())},["Access dashboard →"]));
+  wrap.append(box);
+  return wrap;
+}
+
+function renderModal(){
+  const overlay=el("div",{className:"modal-overlay"});
+  const modal=el("div",{className:"modal"});
+  const hdr=el("div",{className:"modal-header"});
+  hdr.append(
+    el("div",{},[el("div",{className:"modal-title"},["Share dashboard"]),el("div",{className:"modal-sub"},["Anyone with an access token can view this dashboard."])]),
+    el("button",{className:"modal-close",onClick:()=>setState({showShare:false})},["✕"]),
+  );
+  const list=el("div",{className:"token-list"});
+  if(!state.tokens.length){list.append(el("div",{className:"token-empty"},["No tokens yet. Generate one to share."]));}
+  else state.tokens.forEach(t=>{
+    const row=el("div",{className:"token-row"});
+    const isCopied=state.copiedToken===t.token;
+    row.append(
+      el("div",{style:{flex:1,minWidth:0}},[el("div",{className:"token-val"},[t.token]),el("div",{className:"token-date"},["Created "+new Date(t.createdAt).toLocaleDateString()])]),
+      el("button",{className:"btn-copy"+(isCopied?" copied":""),onClick:()=>copyLink(t.token)},[isCopied?"✓ Copied!":"Copy link"]),
+      el("button",{className:"btn-revoke",onClick:()=>revokeToken(t.token)},["Revoke"]),
+    );
+    list.append(row);
+  });
+  modal.append(hdr,el("button",{className:"btn-gen",onClick:createToken},["+  Generate new access token"]),list,el("div",{className:"modal-footer"},["Tokens grant read + check-off access. Revoke anytime."]));
+  overlay.append(modal);
+  overlay.addEventListener("click",e=>{if(e.target===overlay)setState({showShare:false});});
+  return overlay;
+}
+
+function renderTopbar(){
+  const syncLabel={syncing:"Saving…",synced:"Saved",error:"Sync error"};
+  const syncColor={syncing:"#f59e0b",synced:"#22c55e",error:"#ef4444"};
+  const s=state.syncStatus;
+  const bar=el("div",{className:"topbar"});
+  bar.append(
+    el("div",{className:"topbar-logo"},["🎯"]),
+    el("div",{className:"topbar-title"},["Digital CS Dashboard"]),
+    el("div",{className:"topbar-spacer"}),
+  );
+  if(CONFIGURED){
+    bar.append(el("div",{className:"sync-indicator"},[
+      el("span",{className:"sync-dot "+s,style:{background:syncColor[s]}}),
+      syncLabel[s],
+    ]));
+  }
+  bar.append(el("div",{className:"live-label"},[el("span",{className:"live-dot"})," Live"]));
+  if(state.isOwner)bar.append(el("button",{className:"btn-share",onClick:()=>setState({showShare:true})},["🔗 Share"]));
+  bar.append(el("button",{className:"btn-add"},["+  Add task"]));
+  return bar;
+}
+
+function renderStats(){
+  const keys=allKeys(), done=keys.filter(k=>state.progress[k]).length, total=keys.length;
+  const row=el("div",{className:"stat-row"});
+  [{v:total,l:"Total tasks",c:"#1a1a1a"},{v:total-done,l:"In progress",c:"#2563eb"},{v:0,l:"Blocked",c:"#e85d20"},{v:done,l:"Done",c:"#0F6E56"}]
+    .forEach(s=>{const card=el("div",{className:"stat-card"});card.append(el("div",{className:"stat-val",style:{color:s.c}},[String(s.v)]),el("div",{className:"stat-lbl"},[s.l]));row.append(card);});
+  return row;
+}
+
+function renderProgressBox(){
+  const keys=allKeys(), done=keys.filter(k=>state.progress[k]).length, total=keys.length;
+  const pct=total?Math.round((done/total)*100):0;
+  const box=el("div",{className:"progress-box"});
+  box.append(el("div",{className:"progress-header"},[el("span",{className:"progress-title"},["Overall onboarding progress"]),el("span",{className:"progress-pct"},[pct+"%"])]));
+  box.append(pbar(pct,"#E85D20",7));
+  box.append(el("div",{className:"progress-meta"},[el("span",{},[done+" done"]),el("span",{},[(total-done)+" remaining"])]));
+  const wbars=el("div",{className:"week-bars"});
+  Object.entries(TASKS).forEach(([wk,w])=>{
+    const wDone=w.tasks.filter((_,i)=>state.progress[wk+"-"+i]).length;
+    const wPct=Math.round((wDone/w.tasks.length)*100);
+    const col=el("div",{className:"week-bar"});
+    col.append(el("div",{className:"week-bar-header",style:{color:w.color}},[el("span",{},[w.label]),el("span",{style:{color:"#bbb",fontWeight:400}},[wDone+"/"+w.tasks.length])]));
+    col.append(pbar(wPct,w.color,5));
+    col.append(el("div",{className:"week-bar-pct",style:{color:w.color}},[wPct+"%"]));
+    wbars.append(col);
+  });
+  box.append(wbars);return box;
+}
+
+function renderTabs(){
+  const tabs=[
+    {id:"plan",     icon:"📋", label:"Onboarding plan"},
+    {id:"sessions", icon:"📅", label:"Sessions"},
+    {id:"tools",    icon:"🔑", label:"Tools access"},
+  ];
+  const wrap=el("div",{className:"tabs"});
+  tabs.forEach(t=>wrap.append(el("button",{className:"tab-btn"+(state.activeTab===t.id?" active":""),onClick:()=>setState({activeTab:t.id})},[t.icon+" "+t.label])));
+  return wrap;
+}
+
+function renderPlan(){
+  const wrap=el("div");
+  const banner=el("div",{className:"welcome-banner"});
+  banner.append(el("div",{className:"welcome-circle1"}),el("div",{className:"welcome-circle2"}));
+  banner.append(el("div",{className:"welcome-badge"},["Welcome to SmartBear"]));
+  banner.append(el("div",{className:"welcome-title"},["Congratulations on joining the Digital CS team!"]));
+  banner.append(el("div",{className:"welcome-text",style:{color:"#8a9bb5"}},["We are excited to welcome you to the Digital Customer Success team. To help you get started, we have put together a structured three-week onboarding plan."]));
+  banner.append(el("div",{className:"welcome-text",style:{color:"#6a7d96"}},["The goal is to give you a clear understanding of how Digital CS creates value at SmartBear, the tools and resources we use, and the core product areas you will work with."]));
+  wrap.append(banner);
+  Object.entries(TASKS).forEach(([wk,w],wi)=>{
+    const expanded=state.expandedWeeks[wk];
+    const sec=el("div",{style:{marginBottom:"10px"}});
+    const hdr=el("div",{className:"week-header",onClick:()=>setState({expandedWeeks:{...state.expandedWeeks,[wk]:!expanded}})});
+    const left=el("div",{className:"week-header-left"});
+    left.append(el("span",{className:"week-num",style:{background:w.color}},[String(wi+1)]),el("span",{className:"week-label-text"},["Week "+(wi+1)+" — "+w.title]));
+    const right=el("div",{className:"week-header-right"});
+    right.append(el("span",{className:"week-days"},[w.days]),el("span",{className:"week-chevron"},[expanded?"▲":"▼"]));
+    hdr.append(left,right);sec.append(hdr);
+    if(expanded){
+      sec.append(el("div",{className:"week-intro"},[w.intro]),el("div",{className:"learn-label"},["You will learn about"]));
+      w.tasks.forEach((task,i)=>{
+        const key=wk+"-"+i, done=!!state.progress[key];
+        const row=el("div",{className:"task-row"+(done?" done":""),onClick:()=>toggleTask(wk,i)});
+        const check=el("span",{className:"task-check",style:{borderColor:done?w.color:"#e0dbd5",background:done?w.color:"transparent"}},[done?"✓":""]);
+        row.append(check,el("span",{className:"task-name"},[task.label]),el("span",{className:"task-focus"},[task.focus]));
+        sec.append(row);
+      });
+      sec.append(el("div",{style:{height:"8px"}}));
+    }
+    wrap.append(sec);
+  });
+  wrap.append(el("div",{className:"closing-note"},["Once again, welcome to SmartBear. We are glad to have you on the team and look forward to working with you."]));
+  return wrap;
+}
+
+function renderComplete(){
+  const keys=allKeys(), done=keys.filter(k=>state.progress[k]).length, total=keys.length;
+  const started=keys.filter(k=>state.timestamps[k]&&state.timestamps[k].startedAt).length;
+  const wrap=el("div");
+  const strip=el("div",{className:"summary-strip"});
+  [{l:"Total tasks",v:total,c:"#1a1a1a"},{l:"Started",v:started,c:"#2563eb"},{l:"Completed",v:done,c:"#0F6E56"},{l:"Remaining",v:total-done,c:"#888"}]
+    .forEach(s=>{const card=el("div",{className:"summary-card"});card.append(el("div",{className:"summary-val",style:{color:s.c}},[String(s.v)]),el("div",{className:"summary-lbl"},[s.l]));strip.append(card);});
+  wrap.append(strip);
+  Object.entries(TASKS).forEach(([wk,w],wi)=>{
+    const wHdr=el("div",{className:"complete-week-header"});
+    const info=el("div");info.append(el("div",{className:"complete-week-wlabel",style:{color:w.color}},[w.label]),el("div",{className:"complete-week-title"},[w.title]));
+    wHdr.append(el("span",{className:"complete-week-num",style:{background:w.color}},[String(wi+1)]),info);
+    wrap.append(wHdr);
+    const table=el("div",{className:"ts-table"});
+    const thead=el("div",{className:"ts-header"});
+    thead.append(el("span",{},["Task"]),el("span",{},["Started at"]),el("span",{},["Completed at"]),el("span",{style:{textAlign:"center"}},["Status"]));
+    table.append(thead);
+    w.tasks.forEach((task,i)=>{
+      const key=wk+"-"+i, done=!!state.progress[key], ts=state.timestamps[key]||null;
+      const dur=calcDur(ts&&ts.startedAt,ts&&ts.completedAt);
+      const row=el("div",{className:"ts-row"+(done?" done-row":"")});
+      const taskCell=el("div");
+      taskCell.append(el("div",{className:"ts-task-name"},[task.label]));
+      const tagRow=el("div",{className:"ts-tag-row"});
+      tagRow.append(el("span",{className:"ts-focus-tag"},[task.focus]));
+      if((!ts||!ts.startedAt)&&!done)tagRow.append(el("button",{className:"btn-start",onClick:()=>startTask(wk,i)},["Mark started"]));
+      taskCell.append(tagRow);
+      const startCell=el("div");
+      startCell.append(ts&&ts.startedAt?el("div",{className:"ts-started"},[fmtTs(ts.startedAt)]):el("span",{className:"ts-none"},["Not started"]));
+      const endCell=el("div");
+      if(ts&&ts.completedAt){endCell.append(el("div",{className:"ts-completed"},[fmtTs(ts.completedAt)]));if(dur)endCell.append(el("div",{className:"ts-dur"},["Duration: "+dur]));}
+      else endCell.append(el("span",{className:"ts-none"},["—"]));
+      const circleWrap=el("div");
+      const circle=el("button",{className:"complete-circle",title:done?"Mark incomplete":"Mark complete",onClick:()=>toggleTask(wk,i),style:{borderColor:done?w.color:"#d1d5db",background:done?w.color:"#fff"}},[done?"✓":""]);
+      circleWrap.append(circle);
+      row.append(taskCell,startCell,endCell,circleWrap);
+      table.append(row);
+    });
+    wrap.append(table);
+  });
+  wrap.append(el("div",{className:"ts-hint"},["Timestamps are recorded automatically when you mark a task as complete. Use ",el("strong",{style:{color:"#2563eb"}},["Mark started"])," to log when you begin a task. Duration is calculated from start to completion."]));
+  return wrap;
+}
+
+function renderSessions(){
+  const wrap=el("div");
+  Object.entries(TASKS).forEach(([wk,w],wi)=>{
+    const sec=el("div",{className:"sessions-week"});
+    // Week heading
+    const hdr=el("div",{className:"sessions-week-header"});
+    const info=el("div");
+    info.append(
+      el("div",{style:{fontSize:"11px",fontWeight:700,color:w.color,letterSpacing:"1px",textTransform:"uppercase"}},[w.label]),
+      el("div",{style:{fontSize:"16px",fontWeight:700,color:"#1a1a1a"}},[w.title])
+    );
+    hdr.append(el("span",{className:"sessions-week-num",style:{background:w.color}},[String(wi+1)]),info);
+    sec.append(hdr);
+    // Table — now with a Mark as complete column
+    const table=el("div",{className:"session-table"});
+    const thead=el("div",{className:"session-header",style:{gridTemplateColumns:"36px 1fr 160px 130px"}});
+    thead.append(
+      el("span",{},["#"]),
+      el("span",{},["Topic / Activity"]),
+      el("span",{},["Focus Area"]),
+      el("span",{style:{textAlign:"center"}},["Complete"])
+    );
+    table.append(thead);
+    w.tasks.forEach((task,i)=>{
+      const key=wk+"-"+i;
+      const done=!!state.progress[key];
+      const ts=state.timestamps[key]||null;
+      const row=el("div",{
+        className:"session-row"+(done?" session-row-done":""),
+        style:{
+          gridTemplateColumns:"36px 1fr 160px 130px",
+          borderBottom:i<w.tasks.length-1?"1px solid #f0ece8":"none",
+          background:done?"#fafff9":"#fff",
+        }
+      });
+      // # cell
+      row.append(el("span",{className:"session-num",style:{background:w.color+"18",color:w.color}},[String(i+1)]));
+      // Task name + timestamp hint
+      const nameCell=el("div");
+      nameCell.append(el("span",{
+        className:"session-name",
+        style:{textDecoration:done?"line-through":"none",color:done?"#aaa":"#1a1a1a"}
+      },[task.label]));
+      if(ts&&ts.completedAt){
+        const dur=calcDur(ts.startedAt,ts.completedAt);
+        nameCell.append(el("div",{style:{fontSize:"11px",color:"#0F6E56",marginTop:"3px"}},
+          [fmtTs(ts.completedAt)+(dur?" · "+dur:"")]
+        ));
+      }
+      row.append(nameCell);
+      // Focus area
+      row.append(el("span",{className:"session-focus"},[task.focus]));
+      // Mark as complete button
+      const btnCell=el("div",{style:{display:"flex",justifyContent:"center",alignItems:"center"}});
+      const btn=el("button",{
+        onClick:()=>toggleTask(wk,i),
+        style:{
+          display:"flex",alignItems:"center",gap:"6px",
+          padding:"6px 14px",borderRadius:"99px",fontSize:"12px",fontWeight:600,
+          border:"1.5px solid "+(done?w.color:"#d1d5db"),
+          background:done?w.color:"#fff",
+          color:done?"#fff":"#888",
+          cursor:"pointer",whiteSpace:"nowrap",transition:"all .2s",
+        }
+      },[done?"✓ Done":"Mark complete"]);
+      btnCell.append(btn);
+      row.append(btnCell);
+      table.append(row);
+    });
+    // Deliverable footer
+    const del=el("div",{className:"session-deliverable"});
+    del.append(
+      el("span",{style:{fontSize:"12px",fontWeight:700,color:w.color}},["📋 Deliverable:"]),
+      el("span",{style:{fontSize:"13px",color:"#666"}},["Complete Prep Module & Quiz"])
+    );
+    table.append(del);
+    sec.append(table);
+    wrap.append(sec);
+  });
+  return wrap;
+}
+
+function renderTools(){
+  const wrap=el("div");
+  wrap.append(el("div",{className:"tools-note"},["The following tools require access to be provisioned as part of your onboarding. Confirm access with your manager."]));
+  const list=el("div",{className:"tool-list"});
+  TOOLS.forEach(tool=>{
+    const status=state.toolAccess[tool.name]||"pending";
+    const granted=status==="granted";
+    const card=el("div",{
+      className:"tool-card",
+      style:{borderLeft:"3px solid "+(granted?"#0F6E56":"#e0dbd5")}
+    });
+    // Icon
+    card.append(el("div",{className:"tool-icon"},[tool.icon]));
+    // Name + desc
+    card.append(el("div",{style:{flex:1}},[
+      el("div",{className:"tool-name"},[tool.name]),
+      el("div",{className:"tool-desc"},[tool.desc]),
+    ]));
+    // Dropdown
+    const select=document.createElement("select");
+    select.className="tool-select "+(granted?"granted":"pending");
+    [["pending","⏳  Pending access"],["granted","✅  Access granted"]].forEach(([val,lbl])=>{
+      const opt=document.createElement("option");
+      opt.value=val; opt.textContent=lbl;
+      if(val===status)opt.selected=true;
+      select.appendChild(opt);
+    });
+    select.addEventListener("change",function(){
+      const toolAccess={...state.toolAccess,[tool.name]:this.value};
+      setState({toolAccess});
+      try{localStorage.setItem("dcs_tool_access",JSON.stringify(toolAccess));}catch(e){}
+      if(CONFIGURED){scheduleSave(state.progress,state.timestamps);}
+    });
+    card.append(select);
+    list.append(card);
+  });
+  wrap.append(list);
+  // Summary bar
+  const grantedCount=TOOLS.filter(t=>(state.toolAccess[t.name]||"pending")==="granted").length;
+  const summaryBar=el("div",{style:{display:"flex",alignItems:"center",gap:"10px",marginTop:"20px",background:"#f9f7f5",border:"1px solid #e8e4df",borderRadius:"12px",padding:"14px 20px"}});
+  summaryBar.append(
+    el("div",{style:{flex:1,background:"#e8e4df",borderRadius:"99px",height:"8px",overflow:"hidden"}},[
+      el("div",{style:{width:(grantedCount/TOOLS.length*100)+"%",height:"100%",background:"#0F6E56",borderRadius:"99px",transition:"width .4s ease"}}),
+    ]),
+    el("span",{style:{fontSize:"13px",fontWeight:700,color:"#0F6E56",whiteSpace:"nowrap"}},[grantedCount+" / "+TOOLS.length+" granted"]),
+  );
+  wrap.append(summaryBar);
+  wrap.append(el("div",{className:"tools-footer"},[el("strong",{style:{color:"#1a1a1a"}},["Note: "]),"Contact your IT admin or manager to provision access. Most tools require an SSO account linked to your Smartbear email."]));
+  return wrap;
+}
+
+// ── Main render ────────────────────────────────────────────────────
+function render(){
+  const app=document.getElementById("app");
+  app.innerHTML="";
+  if(state.loading){app.append(renderLoading());return;}
+  if(!state.authed){app.append(renderLogin());return;}
+  const root=el("div");
+  if(!CONFIGURED)root.append(renderConfigBanner());
+  if(state.showShare)root.append(renderModal());
+  root.append(renderTopbar());
+  const main=el("div",{className:"main"});
+  main.append(el("h1",{className:"page-title"},["Digital CS onboarding"]),el("div",{className:"page-sub"},["Smartbear · 3-week program"]));
+  main.append(renderStats(),renderProgressBox(),renderTabs());
+  if(state.activeTab==="plan")main.append(renderPlan());
+  else if(state.activeTab==="sessions")main.append(renderSessions());
+  else if(state.activeTab==="tools")main.append(renderTools());
+  root.append(main);
+  app.append(root);
+}
+
+// ── Boot ───────────────────────────────────────────────────────────
+render(); // show loading spinner immediately
+loadFromSupabase();
+</script>
+</body>
+</html>
