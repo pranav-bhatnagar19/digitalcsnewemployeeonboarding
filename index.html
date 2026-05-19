@@ -302,11 +302,6 @@ async function loadFromSupabase(){
     state.toolAccess = data.toolAccess || {};
     state.loading    = false;
     state.syncStatus = "synced";
-    // Auto-validate token from URL now that tokens are loaded
-    if(state.tokenParam){
-      const found = state.tokens.find(t=>t.token===state.tokenParam);
-      if(found){ state.authed=true; state.isOwner=false; }
-    }
     render();
   }catch(e){
     console.error("Supabase load error",e);
@@ -317,10 +312,6 @@ async function loadFromSupabase(){
     try{const s=localStorage.getItem("dcs_tool_access");if(s)state.toolAccess=JSON.parse(s);}catch(ex){}
     state.loading    = false;
     state.syncStatus = "error";
-    if(state.tokenParam){
-      const found = state.tokens.find(t=>t.token===state.tokenParam);
-      if(found){ state.authed=true; state.isOwner=false; }
-    }
     render();
   }
 }
